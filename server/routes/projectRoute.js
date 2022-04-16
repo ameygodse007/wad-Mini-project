@@ -1,15 +1,59 @@
-import express from "express";
-import asyncHandler from "express-async-handler";
-import Project from "../models/projectmodel.js";
-import generateToken from "../utils/jwtToken.js";
-import { protect, admin } from "../middleware/auth.js";
-import { index, create, update } from "../controllers/projectcontroller.js";
-const router = express.Router();
+const router = require("express").Router();
+const { Project } = require("../models/project");
 
-router.route("/").get(protect, index);
+// method : post
+// use : to save new projects to database
+router.post("/saveproject", async (req, res) => {
+  try {
+    const project = await new Project({ ...req.body });
 
-router.route("/new").post(create);
+    res.send({
+      message: "Project Created Sucessfully",
+      data: {
+        project, //shorthand used
+      },
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({ message: "Project Saving Failed", details: e.msg });
+  }
+});
 
-router.route("/:id").put(update);
+// method : get
+// use  : fetch projects according to filters
+router.get("/getproject", async (req, res) => {
+  try {
+    let filter = {};
 
-export default router;
+    const projects = await Project.find(filter).orderBy("timestamp", "desc");
+
+    res.send({
+      message: "Project Fetched Sucessfully",
+      data: {
+        projects,
+      },
+    });
+  } catch (e) {
+    console.log(e);
+    res
+      .status(500)
+      .send({ message: "Project Fetching Failed", details: e.msg });
+  }
+});
+
+// method : post / delete
+// use : to delete individual projects
+router.post("/deleteproject", async (req, res) => {
+  try {
+    const project = await Project.findByIdAndDelete(p_id);
+
+    res.send({
+      message: "Project Deleted Sucessfully",
+    });
+  } catch (e) {
+    console.log(e);
+    res
+      .status(500)
+      .send({ message: "Project Fetching Failed", details: e.msg });
+  }
+});
